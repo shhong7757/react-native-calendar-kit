@@ -1,20 +1,20 @@
-import { multiply } from 'react-native-calendar-kit';
-import { Text, View, StyleSheet } from 'react-native';
+import { ExampleListScreen, SingleMonthlyCalendarScreen } from './screens';
 
-const result = multiply(3, 7);
+import { createStaticNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import SwipeableMonthlyCalendarScreen from './screens/SwipeableMonthlyCalendarScreen';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+const RootStack = createNativeStackNavigator({
+  initialRouteName: 'ExampleList',
+  screens: {
+    ExampleList: ExampleListScreen,
+    SwipeableMonthlyCalendar: SwipeableMonthlyCalendarScreen,
+    SingleMonthlyCalendar: SingleMonthlyCalendarScreen,
   },
 });
+
+const Navigation = createStaticNavigation(RootStack);
+
+export default function App() {
+  return <Navigation />;
+}
