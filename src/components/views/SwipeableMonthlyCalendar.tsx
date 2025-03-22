@@ -282,9 +282,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   viewport: {
-    width: '100%',
-    height: 360,
+    height: '100%',
     overflow: 'hidden',
+    width: '100%',
   },
 });
 

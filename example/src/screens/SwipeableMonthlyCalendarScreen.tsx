@@ -132,7 +132,7 @@ function SwipeableMonthlyCalendarScreen() {
 
 const styles = StyleSheet.create({
   calendarViewport: { backgroundColor: 'white' },
-  container: { backgroundColor: 'white' },
+  container: { backgroundColor: 'white', height: 460 },
   buttonList: {
     marginTop: 8,
     padding: 16,
