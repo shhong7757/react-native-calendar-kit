@@ -4,7 +4,6 @@ import {
   getDaysInMonth,
   getFirstDayOfMonth,
 } from './date';
-import dayjs from 'dayjs';
 
 export const createMonthlyCalendarRows = (
   date: CalendarDate,
@@ -73,9 +72,7 @@ const fillPrevMonthDays = (
 ) => {
   if (firstRow === undefined) return;
 
-  const prevMonthDays = dayjs(`${year}-${month}-01`)
-    .subtract(1, 'month')
-    .daysInMonth();
+  const prevMonthDays = new Date(year, month - 1, 0).getDate();
 
   const firstNumberIndex = firstRow.findIndex((item) => item != null);
 

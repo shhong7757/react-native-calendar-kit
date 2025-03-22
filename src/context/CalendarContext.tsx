@@ -7,10 +7,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import dayjs, { Dayjs } from 'dayjs';
 import {
   adjustCalendarMonth,
-  createCalendarDateFromDayjs,
+  createCalendarDate,
+  isSameDay,
 } from '../utils/date';
 import { createCalendarEventMap } from '../utils/event';
 
@@ -21,12 +21,10 @@ import type {
   CalendarEventMap,
 } from '../types';
 
-const INITIAL_DATE = dayjs().startOf('day');
-
 export type CalendarProps<CalendarEventDataType> = {
   children: React.ReactNode;
   events?: Array<CalendarEvent<CalendarEventDataType>>;
-  initialDate?: Dayjs;
+  initialDate?: Date;
 };
 
 const CalendarContext = createContext<CalendarContextType<unknown> | undefined>(
@@ -36,10 +34,10 @@ const CalendarContext = createContext<CalendarContextType<unknown> | undefined>(
 export function CalendarProvider<CalendarEventDataType>({
   children,
   events,
-  initialDate = INITIAL_DATE,
+  initialDate = new Date(),
 }: CalendarProps<CalendarEventDataType>) {
   const [currentDate, setCurrentDate] = useState<CalendarDate>({
-    ...createCalendarDateFromDayjs(initialDate),
+    ...createCalendarDate(initialDate),
     isAdjacentMonth: false,
   });
   const [displayedDate, setDisplayedDate] = useState<CalendarDate>(currentDate);
@@ -62,9 +60,9 @@ export function CalendarProvider<CalendarEventDataType>({
   }, [navigatorEnabled]);
 
   useEffect(() => {
-    if (prevInitialDate.current !== initialDate) {
-      setCurrentDate(createCalendarDateFromDayjs(initialDate));
-      setDisplayedDate(createCalendarDateFromDayjs(initialDate));
+    if (!isSameDay(prevInitialDate.current, initialDate)) {
+      setCurrentDate(createCalendarDate(initialDate));
+      setDisplayedDate(createCalendarDate(initialDate));
       prevInitialDate.current = initialDate;
     }
   }, [initialDate]);

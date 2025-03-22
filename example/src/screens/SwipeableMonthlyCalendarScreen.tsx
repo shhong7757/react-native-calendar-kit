@@ -8,13 +8,12 @@ import {
   useSetCurrentDate,
 } from 'react-native-calendar-kit';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import MonthControlButton from '../components/MonthControlButton';
 import MonthlyEventCounter from '../components/MonthlyEventCounter';
 
 import { useCallback, useState } from 'react';
 
-import dayjs from 'dayjs';
 import type { DayComponentProps } from '../../../src/types';
+import MonthControlButton from '../components/MonthControlButton';
 
 type CustomEventType = { text: string };
 
@@ -56,41 +55,49 @@ function CustomDayComponent({
 }
 
 function SwipeableMonthlyCalendarScreen() {
-  const [date, setDate] = useState(dayjs());
+  const [date, setDate] = useState(new Date());
 
   const events: Array<CalendarEvent<CustomEventType>> = [
     {
-      date: dayjs().year(2025).month(0).date(27),
+      date: new Date(2025, 0, 27),
       data: { text: 'one' },
       id: '1',
     },
     {
-      date: dayjs().year(2025).month(1).date(15),
+      date: new Date(2025, 1, 16),
       data: { text: 'two' },
       id: '2',
     },
     {
-      date: dayjs().year(2025).month(2).date(3),
+      date: new Date(2025, 2, 3),
       data: { text: 'three' },
       id: '3',
     },
     {
-      date: dayjs().year(2025).month(2).date(3),
+      date: new Date(2025, 2, 3),
       data: { text: 'four' },
       id: '4',
     },
     {
-      date: dayjs().year(2025).month(2).date(3),
+      date: new Date(2025, 2, 3),
       data: { text: 'five' },
       id: '5',
     },
   ];
 
   const handleIncrementMonth = (value: number) => () =>
-    setDate((prev) => dayjs(prev).add(value, 'month'));
+    setDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() + value);
+      return newDate;
+    });
 
   const handleDecrementMonth = (value: number) => () =>
-    setDate((prev) => dayjs(prev).subtract(value, 'month'));
+    setDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() - value);
+      return newDate;
+    });
 
   return (
     <View>
@@ -102,6 +109,7 @@ function SwipeableMonthlyCalendarScreen() {
           <SwipeableMonthlyCalendar
             viewportStyle={styles.calendarViewport}
             showAdjacentDays
+            shouldMaintainConsistentRowCount
             DayComponent={CustomDayComponent}
           />
         </View>

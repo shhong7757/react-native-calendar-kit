@@ -58,6 +58,7 @@ type SwipeDirectionType =
 interface SwipeableMonthlyCalendarProps<CalendarEventDataType> {
   monthBufferSize?: number;
   showAdjacentDays?: boolean;
+  shouldMaintainConsistentRowCount?: boolean;
   swipeThreshold?: number;
   viewportStyle?: ViewStyle;
   onDayPress?: (events: CalendarEvent<CalendarEventDataType>[]) => void;
@@ -69,6 +70,7 @@ interface SwipeableMonthlyCalendarProps<CalendarEventDataType> {
 function SwipeableMonthlyCalendar<T>({
   monthBufferSize = 1,
   showAdjacentDays = false,
+  shouldMaintainConsistentRowCount = false,
   swipeThreshold = DEFAULT_SWIPE_THRESHOLD,
   viewportStyle,
   onDayPress,
@@ -264,6 +266,9 @@ function SwipeableMonthlyCalendar<T>({
                   key={`swipealbe-monthly-calendar-list-${index}`}
                   date={date}
                   showAdjacentDays={showAdjacentDays}
+                  shouldMaintainConsistentRowCount={
+                    shouldMaintainConsistentRowCount
+                  }
                   onDayPress={onDayPress}
                   DayComponent={DayComponent}
                 />

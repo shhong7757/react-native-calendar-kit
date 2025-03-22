@@ -1,5 +1,4 @@
-import dayjs from 'dayjs';
-import { adjustCalendarMonth, createCalendarDateFromDayjs } from './date';
+import { adjustCalendarMonth, createCalendarDate } from './date';
 import type { CalendarDate, CalendarEvent, CalendarEventMap } from '../types';
 
 export const createCalendarEventMap = <CalendarEventDataType>(
@@ -8,10 +7,7 @@ export const createCalendarEventMap = <CalendarEventDataType>(
   const newData = new Map();
 
   events.forEach(({ date, data, id }) => {
-    const currentDate = dayjs(date);
-    if (!currentDate.isValid()) return;
-
-    const { year, month, day } = createCalendarDateFromDayjs(currentDate);
+    const { year, month, day } = createCalendarDate(date);
 
     const yearMap = newData.get(year) ?? new Map();
     newData.set(year, yearMap);
@@ -20,7 +16,7 @@ export const createCalendarEventMap = <CalendarEventDataType>(
     yearMap.set(month, monthMap);
 
     const dayList = monthMap.get(day) ?? [];
-    monthMap.set(day, [...dayList, { date: currentDate, data, id }]);
+    monthMap.set(day, [...dayList, { date, data, id }]);
   });
 
   return newData;

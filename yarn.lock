@@ -5516,13 +5516,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dayjs@npm:^1.11.13":
-  version: 1.11.13
-  resolution: "dayjs@npm:1.11.13"
-  checksum: f388db88a6aa93956c1f6121644e783391c7b738b73dbc54485578736565c8931bdfba4bb94e9b1535c6e509c97d5deb918bbe1ae6b34358d994de735055cca9
-  languageName: node
-  linkType: hard
-
 "debug@npm:2.6.9, debug@npm:^2.2.0, debug@npm:^2.6.9":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
@@ -11959,7 +11952,6 @@ __metadata:
     "@expo/metro-runtime": ~4.0.1
     "@react-navigation/native": ^7.0.15
     "@react-navigation/native-stack": ^7.2.1
-    dayjs: ^1.11.13
     expo: ~52.0.38
     expo-status-bar: ~2.0.1
     react: 18.3.1
@@ -11984,7 +11976,6 @@ __metadata:
     "@types/jest": ^29.5.5
     "@types/react": ^18.2.44
     commitlint: ^17.0.2
-    dayjs: ^1.11.13
     del-cli: ^5.1.0
     eslint: ^8.51.0
     eslint-config-prettier: ^9.0.0

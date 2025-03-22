@@ -1,20 +1,19 @@
-import dayjs from 'dayjs';
 import type { CalendarDate } from '../types';
 
 export const getFirstDayOfMonth = ({ year, month }: CalendarDate): number => {
-  return dayjs(`${year}-${month}-01`).day();
+  return new Date(year, month - 1, 1).getDay();
 };
 
 export const getDaysInMonth = ({ year, month }: CalendarDate): number[] => {
-  const daysInMonth = dayjs(`${year}-${month}`).daysInMonth();
+  const daysInMonth = new Date(year, month, 0).getDate();
   return Array.from({ length: daysInMonth }, (_, i) => i + 1);
 };
 
-export const createCalendarDateFromDayjs = (date: dayjs.Dayjs) =>
+export const createCalendarDate = (date: Date) =>
   ({
-    year: date.year(),
-    month: date.month() + 1,
-    day: date.date(),
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
   }) as CalendarDate;
 
 export const getMonthDifference = (
@@ -68,5 +67,13 @@ export function isSame(date1: CalendarDate, date2: CalendarDate): boolean {
     date1.year === date2.year &&
     date1.month === date2.month &&
     date1.day === date2.day
+  );
+}
+
+export function isSameDay(date1: Date, date2: Date) {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
   );
 }
