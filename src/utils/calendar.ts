@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 
 export const createMonthlyCalendarRows = (
   date: CalendarDate,
+  shouldMaintainConsistentRowCount: boolean,
   showAdjacentDays: boolean
 ) => {
   const days = getDaysInMonth(date);
@@ -23,6 +24,10 @@ export const createMonthlyCalendarRows = (
   if (showAdjacentDays) {
     fillPrevMonthDays(calendarRows[0], date.year, date.month);
     fillNextMonthDays(calendarRows[calendarRows.length - 1], date);
+  }
+
+  if (shouldMaintainConsistentRowCount && calendarRows.length === 5) {
+    calendarRows.push(Array(7).fill(null));
   }
 
   return calendarRows;

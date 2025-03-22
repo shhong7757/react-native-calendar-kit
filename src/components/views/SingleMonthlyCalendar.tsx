@@ -19,6 +19,7 @@ function SingleMonthlyCalendar<CalendarEventDataType>({
   return (
     <MonthlyCalendar
       date={displayedDate}
+      shouldMaintainConsistentRowCount
       showAdjacentDays
       onDayPress={onDayPress}
       DayComponent={DayComponent}

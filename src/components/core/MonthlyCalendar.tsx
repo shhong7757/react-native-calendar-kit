@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 
 interface MonthlyCalendarProps<CalendarEventDataType> {
   date: CalendarDate;
+  shouldMaintainConsistentRowCount?: boolean;
   showAdjacentDays?: boolean;
   DayComponent?: (
     props: DayComponentProps<CalendarEventDataType>
@@ -23,12 +24,18 @@ interface MonthlyCalendarProps<CalendarEventDataType> {
 function MonthlyCalendar<CalendarEventDataType>({
   date,
   showAdjacentDays = false,
+  shouldMaintainConsistentRowCount = false,
   onDayPress,
   DayComponent,
 }: MonthlyCalendarProps<CalendarEventDataType>): React.JSX.Element {
   const rows = useMemo(
-    () => createMonthlyCalendarRows(date, showAdjacentDays),
-    [date, showAdjacentDays]
+    () =>
+      createMonthlyCalendarRows(
+        date,
+        showAdjacentDays,
+        shouldMaintainConsistentRowCount
+      ),
+    [date, shouldMaintainConsistentRowCount, showAdjacentDays]
   );
 
   const Day = DayComponent ?? DefaultDayComponent;
