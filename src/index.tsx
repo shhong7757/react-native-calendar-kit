@@ -10,9 +10,6 @@ export { default as WeekdayList } from './components/core/WeekdayList';
 export { default as SingleMonthlyCalendar } from './components/views/SingleMonthlyCalendar';
 export { default as SwipeableMonthlyCalendar } from './components/views/SwipeableMonthlyCalendar';
 
-// utils
-export { getDailyEvents, getMonthlyEvents } from './utils/event';
-
 // type
 export type {
   CalendarContextType,
