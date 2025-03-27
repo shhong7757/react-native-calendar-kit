@@ -4,26 +4,27 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import {
-  adjustCalendarMonth,
-  createCalendarDate,
-  isSameDay,
-} from '../utils/date';
+
 import { createCalendarEventMap } from '../utils/event';
+import { createCalendarDate } from '../utils/calendarDate';
+
+import { DEFAULT_CALENDAR_LABELS } from '../constants';
 
 import type {
   CalendarContextType,
   CalendarDate,
   CalendarEvent,
   CalendarEventMap,
+  CalendarLabels,
+  UpdateViewingDateParam,
 } from '../types';
 
-export type CalendarProps<CalendarEventDataType> = {
+export type CalendarProps<T> = {
+  labels?: CalendarLabels;
   children: React.ReactNode;
-  events?: Array<CalendarEvent<CalendarEventDataType>>;
+  events?: Array<CalendarEvent<T>>;
   initialDate?: Date;
 };
 
@@ -31,66 +32,98 @@ const CalendarContext = createContext<CalendarContextType<unknown> | undefined>(
   undefined
 );
 
-export function CalendarProvider<CalendarEventDataType>({
+export function CalendarProvider<T>({
   children,
   events,
   initialDate = new Date(),
-}: CalendarProps<CalendarEventDataType>) {
-  const [currentDate, setCurrentDate] = useState<CalendarDate>({
-    ...createCalendarDate(initialDate),
-    isAdjacentMonth: false,
-  });
-  const [displayedDate, setDisplayedDate] = useState<CalendarDate>(currentDate);
+  labels: inputLabels,
+}: CalendarProps<T>) {
+  const [eventMap, setEventMap] = useState<CalendarEventMap<T>>(new Map());
+  const [navigateEnabled, setNavigateEnabled] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<CalendarDate>(
+    createCalendarDate(initialDate)
+  );
+  const [viewingDate, setViewingDate] = useState<CalendarDate>(
+    createCalendarDate(initialDate)
+  );
 
-  const [eventMap, setEventMap] = useState<
-    CalendarEventMap<CalendarEventDataType>
-  >(new Map());
-  const [navigatorEnabled, setNavigatorEnabled] = useState(true);
+  const labels = useMemo<CalendarLabels>(
+    () => ({
+      ...DEFAULT_CALENDAR_LABELS,
+      ...inputLabels,
+    }),
+    [inputLabels]
+  );
 
-  const prevInitialDate = useRef(initialDate);
+  const updateViewingDate = useCallback(
+    (param: UpdateViewingDateParam) => {
+      if ('unit' in param) {
+        const { year, month, day } = viewingDate;
+        const oldDate = new Date(year, month - 1, day);
+        let newDate: Date;
+        switch (param.unit) {
+          case 'y':
+            newDate = new Date(
+              oldDate.getFullYear() + param.offset,
+              oldDate.getMonth(),
+              1
+            );
+            break;
+          case 'm':
+            newDate = new Date(
+              oldDate.getFullYear(),
+              oldDate.getMonth() + param.offset,
+              1
+            );
+            break;
+          case 'd':
+            newDate = new Date(
+              oldDate.getFullYear(),
+              oldDate.getMonth(),
+              oldDate.getDate() + param.offset
+            );
+            break;
+        }
 
-  const moveToPrevMonth = useCallback(() => {
-    if (!navigatorEnabled) return;
-    setCurrentDate((prev) => adjustCalendarMonth(prev, -1));
-  }, [navigatorEnabled]);
-
-  const moveToNextMonth = useCallback(() => {
-    if (!navigatorEnabled) return;
-    setCurrentDate((prev) => adjustCalendarMonth(prev, +1));
-  }, [navigatorEnabled]);
-
-  useEffect(() => {
-    if (!isSameDay(prevInitialDate.current, initialDate)) {
-      setCurrentDate(createCalendarDate(initialDate));
-      setDisplayedDate(createCalendarDate(initialDate));
-      prevInitialDate.current = initialDate;
-    }
-  }, [initialDate]);
+        if (!isNaN(newDate.getTime())) {
+          setViewingDate(createCalendarDate(newDate));
+        } else {
+          console.error('Invalid date calculation');
+        }
+      } else {
+        setViewingDate(param);
+      }
+    },
+    [viewingDate]
+  );
 
   useEffect(() => {
     if (events === undefined || events.length === 0) return;
     setEventMap(() => createCalendarEventMap(events));
   }, [events]);
 
-  const value: CalendarContextType<CalendarEventDataType> = useMemo(
+  useEffect(() => {
+    setViewingDate(selectedDate);
+  }, [selectedDate]);
+
+  const value: CalendarContextType<T> = useMemo(
     () => ({
-      currentDate,
-      displayedDate,
+      labels,
       eventMap,
-      navigatorEnabled,
-      moveToNextMonth,
-      moveToPrevMonth,
-      setCurrentDate,
-      setDisplayedDate,
-      setNavigatorEnabled,
+      navigateEnabled,
+      selectedDate,
+      viewingDate,
+      setNavigateEnabled,
+      setSelectedDate,
+      updateViewingDate,
     }),
     [
-      currentDate,
-      displayedDate,
+      labels,
       eventMap,
-      navigatorEnabled,
-      moveToNextMonth,
-      moveToPrevMonth,
+      navigateEnabled,
+      selectedDate,
+      viewingDate,
+      updateViewingDate,
     ]
   );
 
@@ -101,11 +134,9 @@ export function CalendarProvider<CalendarEventDataType>({
   );
 }
 
-export function useCalendarContext<CalendarEventDataType>() {
+export function useCalendarContext<T>() {
   const context = useContext(
-    CalendarContext as React.Context<
-      CalendarContextType<CalendarEventDataType> | undefined
-    >
+    CalendarContext as React.Context<CalendarContextType<T> | undefined>
   );
   if (!context) {
     throw new Error(

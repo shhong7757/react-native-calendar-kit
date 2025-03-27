@@ -1,5 +1,6 @@
-import { adjustCalendarMonth, createCalendarDate } from './date';
-import type { CalendarDate, CalendarEvent, CalendarEventMap } from '../types';
+import { createCalendarDate } from './calendarDate';
+
+import type { CalendarEvent, CalendarEventMap, CalendarDate } from '../types';
 
 export const createCalendarEventMap = <CalendarEventDataType>(
   events: Array<CalendarEvent<CalendarEventDataType>>
@@ -72,37 +73,16 @@ export const getNestedMapData = <CalendarEventDataType>(
   return flattenCalendarEventMap(currentMap);
 };
 
-export const getDailyEvents = <CalendarEventDataType>(
-  eventMap: CalendarEventMap<CalendarEventDataType>,
-  year: number,
-  month: number,
-  day: number
-): Array<CalendarEvent<CalendarEventDataType>> => {
+export const getDailyEvents = <T>(
+  eventMap: CalendarEventMap<T>,
+  { year, month, day }: CalendarDate
+): Array<CalendarEvent<T>> => {
   return getNestedMapData(eventMap, year, month, day);
 };
 
 export const getMonthlyEvents = <T>(
   eventMap: CalendarEventMap<T>,
-  year: number,
-  month: number
+  { year, month }: CalendarDate
 ): Array<CalendarEvent<T>> => {
   return getNestedMapData(eventMap, year, month);
 };
-
-export function createMonthBuffer(date: CalendarDate, bufferSize: number) {
-  const totalLength = bufferSize * 2 + 1;
-  const dateArray: CalendarDate[] = new Array(totalLength);
-
-  const centerIndex = bufferSize;
-  dateArray[centerIndex] = date;
-
-  for (let i = 1; i <= bufferSize; i++) {
-    dateArray[centerIndex - i] = adjustCalendarMonth(date, -1 * i);
-  }
-
-  for (let i = 1; i <= bufferSize; i++) {
-    dateArray[centerIndex + i] = adjustCalendarMonth(date, i);
-  }
-
-  return dateArray;
-}

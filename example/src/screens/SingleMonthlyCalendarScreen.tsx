@@ -3,7 +3,7 @@ import {
   Calendar,
   Navigator,
   SingleMonthlyCalendar,
-  WeekDayList,
+  WeekdayList,
 } from 'react-native-calendar-kit';
 
 function SingleMonthlyCalendarScreen() {
@@ -11,7 +11,7 @@ function SingleMonthlyCalendarScreen() {
     <Calendar>
       <View style={styles.container}>
         <Navigator />
-        <WeekDayList />
+        <WeekdayList />
         <SingleMonthlyCalendar />
       </View>
     </Calendar>

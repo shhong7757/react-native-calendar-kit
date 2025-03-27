@@ -1,296 +1,205 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-} from 'react';
-import {
-  StyleSheet,
-  View,
-  type LayoutChangeEvent,
-  type ViewStyle,
-} from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import MonthlyCalendar from '../core/MonthlyCalendar';
-import { createMonthBuffer } from '../../utils/event';
-import {
-  adjustCalendarMonth,
-  getMonthDifference,
-  isSame,
-  isAfter,
-  isBefore,
-} from '../../utils/date';
-import type {
-  CalendarDate,
-  CalendarEvent,
-  DayComponentProps,
-} from '../../types';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 import { useCalendarContext } from '../../context/CalendarContext';
 
-const DEFAULT_ANIMATION_DURATION = 150;
-const DEFAULT_SWIPE_THRESHOLD = 0.4;
+import {
+  areDatesEqual,
+  calculateMonthDifference,
+  isDateAfter,
+  isDateBefore,
+  shiftMonth,
+} from '../../utils/calendarDate';
 
-const SWIPE_DIRECTION = {
-  LEFT: 'LEFT',
-  RIGHT: 'RIGHT',
-  NONE: 'NONE',
-} as const;
+import type {
+  CalendarEvent,
+  CalendarDate,
+  DayComponentProps,
+  MonthlyCalendarOptions,
+  SwipeDirectionType,
+  SwipeableContainerRef,
+  MonthlyCalendarProps,
+} from '../../types';
 
-const calcWindowWidth = (bufferSize: number): ViewStyle['width'] => {
-  return (100 * bufferSize + '%') as `${number}%`;
+import { SWIPE_DIRECTION } from '../../constants';
+import SwipeableContainer from '../core/SwipeableContainer';
+
+const arePropsEqual = (
+  prevProps: MonthlyCalendarProps<any>,
+  nextProps: MonthlyCalendarProps<any>
+) => {
+  return (
+    areDatesEqual(prevProps.viewingDate, nextProps.viewingDate) &&
+    prevProps.DayComponent === nextProps.DayComponent &&
+    JSON.stringify(prevProps.options) === JSON.stringify(nextProps.options)
+  );
 };
 
-type SwipeDirectionType =
-  (typeof SWIPE_DIRECTION)[keyof typeof SWIPE_DIRECTION];
+const MemoizedMonthlyCalendar = React.memo<{
+  viewingDate: CalendarDate;
+  selectedDate: CalendarDate;
+  options: MonthlyCalendarOptions;
+  DayComponent?: (props: DayComponentProps<any>) => React.JSX.Element;
+  onDayPress?: (events: CalendarEvent<any>[]) => void;
+}>(
+  ({ viewingDate, selectedDate, options, DayComponent, onDayPress }) => (
+    <MonthlyCalendar
+      viewingDate={viewingDate}
+      selectedDate={selectedDate}
+      options={options}
+      DayComponent={DayComponent}
+      onDayPress={onDayPress}
+    />
+  ),
+  arePropsEqual
+);
+
+const SlidingContents = React.memo<
+  Omit<MonthlyCalendarProps<any>, 'onDayPress' | 'viewingDate'> & {
+    calendarList: CalendarDate[];
+    options: MonthlyCalendarOptions;
+  }
+>(({ calendarList, options, ...props }) => (
+  <>
+    {calendarList.map((value, index) => (
+      <MemoizedMonthlyCalendar
+        key={`monthly-calendar-list-${index}`}
+        options={options}
+        viewingDate={value}
+        {...props}
+      />
+    ))}
+  </>
+));
 
 interface SwipeableMonthlyCalendarProps<CalendarEventDataType> {
-  monthBufferSize?: number;
-  showAdjacentDays?: boolean;
-  shouldMaintainConsistentRowCount?: boolean;
+  monthlyCalendarOptions?: MonthlyCalendarOptions;
+  swipeAnimationDuration?: number;
   swipeThreshold?: number;
-  viewportStyle?: ViewStyle;
   onDayPress?: (events: CalendarEvent<CalendarEventDataType>[]) => void;
+  onMonthChange?: (date: Date) => void;
   DayComponent?: (
     props: DayComponentProps<CalendarEventDataType>
   ) => React.JSX.Element;
 }
 
+const createMonthlyCalendarList = (date: CalendarDate) => [
+  shiftMonth(date, -1),
+  date,
+  shiftMonth(date, 1),
+];
+
 function SwipeableMonthlyCalendar<T>({
-  monthBufferSize = 1,
-  showAdjacentDays = false,
-  shouldMaintainConsistentRowCount = false,
-  swipeThreshold = DEFAULT_SWIPE_THRESHOLD,
-  viewportStyle,
+  monthlyCalendarOptions = {
+    showAdjacentDays: false,
+    shouldMaintainConsistentRowCount: false,
+  },
   onDayPress,
+  onMonthChange,
   DayComponent,
 }: SwipeableMonthlyCalendarProps<T>): React.JSX.Element {
-  const { displayedDate, setDisplayedDate, setNavigatorEnabled } =
+  const { viewingDate, selectedDate, updateViewingDate, setNavigateEnabled } =
     useCalendarContext();
 
-  const swipeDirection = useSharedValue<SwipeDirectionType>(
-    SWIPE_DIRECTION.NONE
-  );
-  const windowPosition = useSharedValue(0);
-  const windowAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: windowPosition.value }],
-  }));
-
-  const [monthlyCalendarViewWidth, setMonthlyCalendarViewWidth] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState<CalendarDate>(displayedDate);
-  const prevCurrentMonth = useRef(currentMonth);
-
-  const safeMonthBufferSize = Math.max(1, monthBufferSize);
-  const totalBufferedMonths = safeMonthBufferSize * 2 + 1;
-  const windowWidth = calcWindowWidth(totalBufferedMonths);
-
-  const monthBuffer = useMemo(
-    () => createMonthBuffer(currentMonth, monthBufferSize),
-    [currentMonth, monthBufferSize]
+  const [baseCalendarData, setBaseCalendarData] =
+    useState<CalendarDate>(viewingDate);
+  const [swipeCalendarList, setSwipeCalendarList] = useState<CalendarDate[]>(
+    createMonthlyCalendarList(viewingDate)
   );
 
-  const moveToNextMonth = () => {
-    const newDate = adjustCalendarMonth(displayedDate, 1);
-    setDisplayedDate(newDate);
-    setCurrentMonth(newDate);
-  };
-
-  const moveToPrevMonth = () => {
-    const newDate = adjustCalendarMonth(displayedDate, -1);
-    setDisplayedDate(newDate);
-    setCurrentMonth(newDate);
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const syncPivotToCurrentDate = () => {
-    setCurrentMonth(displayedDate);
-  };
-
-  const calcCenterPosition = useCallback(() => {
-    return -1 * monthlyCalendarViewWidth * safeMonthBufferSize;
-  }, [monthlyCalendarViewWidth, safeMonthBufferSize]);
-
-  const handleWindowLayout = useCallback(
-    (e: LayoutChangeEvent) => {
-      const width = e.nativeEvent.layout.width / totalBufferedMonths;
-      windowPosition.value = -1 * width * safeMonthBufferSize;
-      setMonthlyCalendarViewWidth(width);
-    },
-    [windowPosition, safeMonthBufferSize, totalBufferedMonths]
-  );
+  const swipeableContainerRef = useRef<SwipeableContainerRef>(null);
 
   useEffect(() => {
-    const hasDisplayedMonthChanged = !isSame(displayedDate, currentMonth);
-
-    if (!hasDisplayedMonthChanged) return;
-
-    const monthDiff = getMonthDifference(displayedDate, currentMonth);
-    const shouldAnimate = Math.abs(monthDiff) <= safeMonthBufferSize;
-
-    // 2개의 Date 차이가 Buffer 사이즈보다 작다면 애니메이션을 실행하지 않는다.
-    if (!shouldAnimate) {
-      setCurrentMonth(displayedDate);
+    if (areDatesEqual(viewingDate, baseCalendarData)) {
       return;
     }
 
-    let newPosition = calcCenterPosition();
-    if (isBefore(displayedDate, currentMonth)) {
-      newPosition =
-        newPosition + monthlyCalendarViewWidth * Math.abs(monthDiff);
-    } else if (isAfter(displayedDate, currentMonth)) {
-      newPosition =
-        newPosition + -1 * monthlyCalendarViewWidth * Math.abs(monthDiff);
+    setBaseCalendarData(viewingDate);
+
+    // 년도, 달이 같을 경우 swipe 진행하지 않는다.
+    if (
+      viewingDate.month === baseCalendarData.month &&
+      viewingDate.year === baseCalendarData.year
+    ) {
+      return;
     }
 
-    setNavigatorEnabled(false);
-    windowPosition.value = withTiming(
-      newPosition,
-      { duration: DEFAULT_ANIMATION_DURATION },
-      () => {
-        runOnJS(syncPivotToCurrentDate)();
-        runOnJS(setNavigatorEnabled)(true);
-      }
-    );
-  }, [
-    calcCenterPosition,
-    displayedDate,
-    monthlyCalendarViewWidth,
-    currentMonth,
-    windowPosition,
-    safeMonthBufferSize,
-    setNavigatorEnabled,
-    syncPivotToCurrentDate,
-  ]);
+    // 1개월 차이만 날 경우 swipe 진행하지 않는다.
+    const diff = calculateMonthDifference(viewingDate, baseCalendarData);
+    const shouldAnimate = Math.abs(diff) <= 1;
+    if (!shouldAnimate) {
+      setBaseCalendarData(viewingDate);
+      setSwipeCalendarList(createMonthlyCalendarList(viewingDate));
 
-  useEffect(() => {
-    const isCurrentMonthChanged = !isSame(
-      currentMonth,
-      prevCurrentMonth.current
-    );
-    const isMonthElementWidthInitialized = monthlyCalendarViewWidth > 0;
-
-    if (isCurrentMonthChanged && isMonthElementWidthInitialized) {
-      const newPosition = calcCenterPosition();
-      windowPosition.value = withTiming(newPosition, { duration: 0 });
-      prevCurrentMonth.current = currentMonth;
-      setDisplayedDate(currentMonth);
+      const newDate = new Date(viewingDate.year, viewingDate.month - 1, 1);
+      onMonthChange?.(newDate);
+      return;
     }
-  }, [
-    currentMonth,
-    monthlyCalendarViewWidth,
-    safeMonthBufferSize,
-    windowPosition,
-    calcCenterPosition,
-    setDisplayedDate,
-  ]);
 
-  const panGesture = Gesture.Pan()
-    .onBegin(() => {
-      runOnJS(setNavigatorEnabled)(false);
-      swipeDirection.value = SWIPE_DIRECTION.NONE;
-    })
-    .onUpdate((e) => {
-      windowPosition.value =
-        -monthlyCalendarViewWidth * safeMonthBufferSize + e.translationX;
-      if (e.translationX > 0) {
-        swipeDirection.value = SWIPE_DIRECTION.LEFT;
-      } else if (e.translationX < 0) {
-        swipeDirection.value = SWIPE_DIRECTION.RIGHT;
-      }
-    })
-    .onEnd(() => {
-      const threshold = monthlyCalendarViewWidth * swipeThreshold;
-      const pivotPosition = -1 * monthlyCalendarViewWidth * safeMonthBufferSize;
-      const isMonthlyCalendarViewWidthInitialized =
-        monthlyCalendarViewWidth > 0;
-      const isThresholdExceeded =
-        Math.abs(Math.abs(pivotPosition) - Math.abs(windowPosition.value)) >
-        threshold;
+    let direction: SwipeDirectionType = SWIPE_DIRECTION.NONE;
+    if (isDateBefore(viewingDate, baseCalendarData)) {
+      direction = SWIPE_DIRECTION.LEFT;
+    } else if (isDateAfter(viewingDate, baseCalendarData)) {
+      direction = SWIPE_DIRECTION.RIGHT;
+    }
 
-      if (isMonthlyCalendarViewWidthInitialized && isThresholdExceeded) {
-        if (swipeDirection.value === SWIPE_DIRECTION.RIGHT) {
-          windowPosition.value = withTiming(
-            pivotPosition - monthlyCalendarViewWidth,
-            { duration: DEFAULT_ANIMATION_DURATION },
-            () => {
-              runOnJS(moveToNextMonth)();
-            }
-          );
-        } else if (swipeDirection.value === SWIPE_DIRECTION.LEFT) {
-          windowPosition.value = withTiming(
-            pivotPosition + monthlyCalendarViewWidth,
-            { duration: DEFAULT_ANIMATION_DURATION },
-            () => {
-              runOnJS(moveToPrevMonth)();
-            }
-          );
-        }
-      } else {
-        windowPosition.value = withTiming(pivotPosition, {
-          duration: DEFAULT_ANIMATION_DURATION,
-        });
+    if (swipeableContainerRef.current) {
+      swipeableContainerRef.current.swipe(direction);
+    }
+  }, [baseCalendarData, viewingDate, onMonthChange]);
+
+  const handleSwipeAnimationComplete = useCallback(() => {
+    setBaseCalendarData(viewingDate);
+    setSwipeCalendarList(createMonthlyCalendarList(viewingDate));
+
+    const newDate = new Date(viewingDate.year, viewingDate.month - 1, 1);
+    onMonthChange?.(newDate);
+  }, [viewingDate, onMonthChange]);
+
+  const handleSwipeThresholdReached = useCallback(
+    (direction: SwipeDirectionType) => {
+      if (direction === SWIPE_DIRECTION.LEFT) {
+        updateViewingDate({ unit: 'm', offset: -1 });
+      } else if (direction === SWIPE_DIRECTION.RIGHT) {
+        updateViewingDate({ unit: 'm', offset: 1 });
       }
-    })
-    .onFinalize(() => {
-      runOnJS(setNavigatorEnabled)(true);
-    });
+    },
+    [updateViewingDate]
+  );
+
+  const handleSwipeSetup = useCallback(() => {
+    setNavigateEnabled(false);
+  }, [setNavigateEnabled]);
+
+  const handleSwipeCleanup = useCallback(() => {
+    setNavigateEnabled(true);
+  }, [setNavigateEnabled]);
 
   return (
-    <View style={[styles.viewport, viewportStyle]}>
-      <GestureHandlerRootView>
-        <GestureDetector gesture={panGesture}>
-          <Animated.View
-            style={[
-              {
-                width: windowWidth,
-              },
-              styles.window,
-              windowAnimatedStyle,
-            ]}
-            onLayout={handleWindowLayout}
-          >
-            {monthBuffer.map((date: CalendarDate, index: number) => {
-              return (
-                <MonthlyCalendar
-                  key={`swipealbe-monthly-calendar-list-${index}`}
-                  date={date}
-                  showAdjacentDays={showAdjacentDays}
-                  shouldMaintainConsistentRowCount={
-                    shouldMaintainConsistentRowCount
-                  }
-                  onDayPress={onDayPress}
-                  DayComponent={DayComponent}
-                />
-              );
-            })}
-          </Animated.View>
-        </GestureDetector>
-      </GestureHandlerRootView>
-    </View>
+    <SwipeableContainer
+      ref={swipeableContainerRef}
+      SlidingContentsComponent={
+        <SlidingContents
+          calendarList={swipeCalendarList}
+          selectedDate={selectedDate}
+          options={monthlyCalendarOptions}
+          DayComponent={DayComponent}
+        />
+      }
+      onSwipeAnimationComplete={handleSwipeAnimationComplete}
+      onSwipeCleanup={handleSwipeCleanup}
+      onSwipeSetup={handleSwipeSetup}
+      onSwipeThresholdReached={handleSwipeThresholdReached}
+    >
+      <MemoizedMonthlyCalendar
+        viewingDate={baseCalendarData}
+        selectedDate={selectedDate}
+        options={monthlyCalendarOptions}
+        DayComponent={DayComponent}
+        onDayPress={onDayPress}
+      />
+    </SwipeableContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  window: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  viewport: {
-    height: '100%',
-    overflow: 'hidden',
-    width: '100%',
-  },
-});
 
 export default SwipeableMonthlyCalendar;

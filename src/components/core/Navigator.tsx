@@ -3,32 +3,34 @@ import * as React from 'react';
 
 import { useCalendarContext } from '../../context/CalendarContext';
 
-import { adjustCalendarMonth } from '../../utils/date';
+import { MonthMap } from '../../types';
 
 function Navigator(): React.JSX.Element {
-  const { displayedDate, setDisplayedDate } = useCalendarContext();
+  const { labels, viewingDate, updateViewingDate } = useCalendarContext();
 
   const handlePrevMonthButtonPress = React.useCallback(() => {
-    setDisplayedDate(adjustCalendarMonth(displayedDate, -1));
-  }, [displayedDate, setDisplayedDate]);
+    updateViewingDate({ unit: 'm', offset: -1 });
+  }, [updateViewingDate]);
 
   const handleNextMonthButtonPress = React.useCallback(() => {
-    setDisplayedDate(adjustCalendarMonth(displayedDate, +1));
-  }, [displayedDate, setDisplayedDate]);
+    updateViewingDate({ unit: 'm', offset: 1 });
+  }, [updateViewingDate]);
 
-  const title = displayedDate.year + '.' + displayedDate.month;
+  const title = `${viewingDate.year}.${viewingDate.month}`;
+  const monthLabel = labels.months[(viewingDate.month - 1) as MonthMap];
 
   return (
     <View style={styles.container}>
-      <View style={styles.full}>
+      <View style={[styles.full, styles.header]}>
         <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>{monthLabel}</Text>
       </View>
       <View style={styles.buttons}>
         <Pressable onPress={handlePrevMonthButtonPress}>
-          <Text style={styles.buttonText}>이전</Text>
+          <Text style={styles.buttonText}>Prev</Text>
         </Pressable>
         <Pressable onPress={handleNextMonthButtonPress}>
-          <Text style={styles.buttonText}>다음</Text>
+          <Text style={styles.buttonText}>Next</Text>
         </Pressable>
       </View>
     </View>
@@ -45,6 +47,9 @@ const styles = StyleSheet.create({
   buttonText: { color: 'black' },
   full: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
   },
   title: {
     fontWeight: 'bold',

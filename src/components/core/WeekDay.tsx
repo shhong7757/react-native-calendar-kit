@@ -1,8 +1,41 @@
-import { Text } from 'react-native';
-import type { WeekDayProps } from '../../types';
+import { StyleSheet, Text } from 'react-native';
 
-function WeekDay({ text }: WeekDayProps) {
-  return <Text>{text}</Text>;
+import { useCalendarContext } from '../../context/CalendarContext';
+
+import { WeekdayMap, type WeekdayProps } from '../../types';
+
+function Weekday({ component, weekday }: WeekdayProps) {
+  const { labels } = useCalendarContext();
+
+  if (component) {
+    return component({ weekday });
+  }
+
+  return (
+    <Text
+      style={[
+        styles.text,
+        weekday === WeekdayMap.SUNDAY && styles.sundayText,
+        weekday === WeekdayMap.SATURDAY && styles.saturdayText,
+      ]}
+    >
+      {labels.weekdays[weekday]}
+    </Text>
+  );
 }
 
-export default WeekDay;
+const styles = StyleSheet.create({
+  text: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#1a1a1a',
+  },
+  sundayText: {
+    color: '#ff4444',
+  },
+  saturdayText: {
+    color: '#4444ff',
+  },
+});
+
+export default Weekday;

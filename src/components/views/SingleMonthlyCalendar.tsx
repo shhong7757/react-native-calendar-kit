@@ -1,26 +1,51 @@
 import MonthlyCalendar from '../core/MonthlyCalendar';
 
-import type { CalendarEvent, DayComponentProps } from '../../types';
 import { useCalendarContext } from '../../context/CalendarContext';
+import { useEffect, useState } from 'react';
 
-interface SingleMonthlyCalendarProps<CalendarEventDataType> {
-  onDayPress?: (events: CalendarEvent<CalendarEventDataType>[]) => void;
-  DayComponent?: (
-    props: DayComponentProps<CalendarEventDataType>
-  ) => React.JSX.Element;
+import { areDatesEqual } from '../../utils/calendarDate';
+
+import type {
+  CalendarEvent,
+  CalendarDate,
+  DayComponentProps,
+  MonthlyCalendarOptions,
+} from '../../types';
+
+interface SingleMonthlyCalendarProps<T> {
+  monthlyCalendarOptions?: MonthlyCalendarOptions;
+  onDayPress?: (events: CalendarEvent<T>[]) => void;
+  onMonthChange?: (date: Date) => void;
+  DayComponent?: (props: DayComponentProps<T>) => React.JSX.Element;
 }
 
-function SingleMonthlyCalendar<CalendarEventDataType>({
+function SingleMonthlyCalendar<T>({
+  monthlyCalendarOptions,
   onDayPress,
+  onMonthChange,
   DayComponent,
-}: SingleMonthlyCalendarProps<CalendarEventDataType>): React.JSX.Element {
-  const { displayedDate } = useCalendarContext();
+}: SingleMonthlyCalendarProps<T>): React.JSX.Element {
+  const { viewingDate, selectedDate } = useCalendarContext();
+
+  const [monthlyCalendarData, setMonthlyCalendarData] =
+    useState<CalendarDate>(viewingDate);
+
+  useEffect(() => {
+    if (areDatesEqual(viewingDate, monthlyCalendarData)) return;
+    setMonthlyCalendarData(viewingDate);
+  }, [viewingDate, monthlyCalendarData]);
+
+  useEffect(() => {
+    onMonthChange?.(
+      new Date(monthlyCalendarData.year, monthlyCalendarData.month - 1, 1)
+    );
+  }, [monthlyCalendarData, onMonthChange]);
 
   return (
     <MonthlyCalendar
-      date={displayedDate}
-      shouldMaintainConsistentRowCount
-      showAdjacentDays
+      viewingDate={monthlyCalendarData}
+      selectedDate={selectedDate}
+      options={monthlyCalendarOptions}
       onDayPress={onDayPress}
       DayComponent={DayComponent}
     />

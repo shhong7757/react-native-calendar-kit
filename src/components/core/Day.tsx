@@ -1,27 +1,46 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { useCalendarContext } from '../../context/CalendarContext';
 import { useCallback } from 'react';
 
+import { getDailyEvents } from '../../utils/event';
+
 import type { DayComponentProps } from '../../types';
-import { useDailyEvents, useSetCurrentDate } from '../../hooks/useCalendar';
 
-function Day<T>({ date, onDayPress }: DayComponentProps<T>): React.JSX.Element {
-  const setCurrentDate = useSetCurrentDate();
+function Day<T>({
+  component,
+  date,
+  metadata,
+  onPress,
+}: DayComponentProps<T>): React.JSX.Element {
+  const { eventMap, setSelectedDate } = useCalendarContext<T>();
 
-  const events = useDailyEvents<T>(date.year, date.month, date.day);
+  const events = getDailyEvents(eventMap, date);
 
   const handlePress = useCallback(() => {
-    setCurrentDate(date);
-    onDayPress?.(events);
-  }, [events, onDayPress, setCurrentDate, date]);
+    setSelectedDate(date);
+    onPress?.(events);
+  }, [events, onPress, date, setSelectedDate]);
+
+  const getTextColor = () => {
+    if (metadata?.isSelectedDay) return 'blue';
+    if (metadata?.isAdjacentMonth) return 'gray';
+    if (metadata?.isSunday) return 'red';
+    if (metadata?.isToday) return 'red';
+    return 'black';
+  };
 
   const textStyle = {
-    color: date.isAdjacentMonth ? 'gray' : 'black',
+    color: getTextColor(),
   };
 
   return (
     <Pressable style={styles.container} onPress={handlePress}>
-      <Text style={textStyle}>{date.day}</Text>
+      {component ? (
+        component({ date, events })
+      ) : (
+        <Text style={textStyle}>{date.day}</Text>
+      )}
     </Pressable>
   );
 }

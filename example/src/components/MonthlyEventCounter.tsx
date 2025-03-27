@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useCalendarContext } from '../../../src/context/CalendarContext';
-import { useMonthlyEvents } from 'react-native-calendar-kit';
+
+import { getMonthlyEvents } from '../../../src/utils/event';
 
 function MonthlyEventCounter() {
-  const { displayedDate } = useCalendarContext();
-  const events = useMonthlyEvents(displayedDate.year, displayedDate.month);
+  const { eventMap, viewingDate } = useCalendarContext();
+  const events = getMonthlyEvents(eventMap, viewingDate);
 
   return (
     <View style={styles.container}>

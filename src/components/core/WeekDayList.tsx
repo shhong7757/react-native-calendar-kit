@@ -1,29 +1,39 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
-import type { WeekDayProps } from '../../types';
-import DefaultWeekDayComponent from './WeekDay';
+import Weekday from './Weekday';
 
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+import { WeekdayMap, type WeekdayProps } from '../../types';
 
-interface WeekDaysProps {
+interface WeekdayListProps {
   containerStyle?: ViewStyle;
   contentContainerStyle?: ViewStyle;
-  WeekDayComponent?: (props: WeekDayProps) => React.JSX.Element;
+  WeekDayComponent?: (props: WeekdayProps) => React.JSX.Element;
 }
 
-function WeekDays({
+function WeekdayList({
   containerStyle,
   contentContainerStyle,
   WeekDayComponent,
-}: WeekDaysProps): React.JSX.Element {
-  const WeekDay = WeekDayComponent ?? DefaultWeekDayComponent;
-
+}: WeekdayListProps): React.JSX.Element {
   return (
     <View style={[styles.container, containerStyle]}>
-      {WEEKDAYS.map((value) => (
-        <View key={value} style={[styles.weekDay, contentContainerStyle]}>
-          <WeekDay text={value} />
-        </View>
-      ))}
+      {[
+        WeekdayMap.SUNDAY,
+        WeekdayMap.MONDAY,
+        WeekdayMap.TUESDAY,
+        WeekdayMap.WEDNESDAY,
+        WeekdayMap.THURSDAY,
+        WeekdayMap.FRIDAY,
+        WeekdayMap.SATURDAY,
+      ].map((weekday, index) => {
+        return (
+          <View
+            key={`weekday-list-${index}`}
+            style={[styles.weekDay, contentContainerStyle]}
+          >
+            <Weekday component={WeekDayComponent} weekday={weekday} />
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -37,4 +47,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WeekDays;
+export default WeekdayList;

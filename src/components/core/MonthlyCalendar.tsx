@@ -1,57 +1,45 @@
 import { StyleSheet, View } from 'react-native';
-import DefaultDayComponent from '../core/Day';
-
-import { createMonthlyCalendarRows } from '../../utils/calendar';
-
-import type {
-  CalendarDate,
-  CalendarEvent,
-  DayComponentProps,
-} from '../../types';
+import Day from '../core/Day';
 
 import { useMemo } from 'react';
 
-interface MonthlyCalendarProps<CalendarEventDataType> {
-  date: CalendarDate;
-  shouldMaintainConsistentRowCount?: boolean;
-  showAdjacentDays?: boolean;
-  DayComponent?: (
-    props: DayComponentProps<CalendarEventDataType>
-  ) => React.JSX.Element;
-  onDayPress?: (events: CalendarEvent<CalendarEventDataType>[]) => void;
-}
+import { createMonthlyCalendarMatrix } from '../../utils/monthlyCalendar';
 
-function MonthlyCalendar<CalendarEventDataType>({
-  date,
-  showAdjacentDays = false,
-  shouldMaintainConsistentRowCount = false,
+import type { MonthlyCalendarProps } from '../../types';
+
+import { MONTHLY_CALENDAR_OPTIONS } from '../../constants';
+
+function MonthlyCalendar<T>({
+  viewingDate,
+  selectedDate,
+  options,
   onDayPress,
   DayComponent,
-}: MonthlyCalendarProps<CalendarEventDataType>): React.JSX.Element {
-  const rows = useMemo(
-    () =>
-      createMonthlyCalendarRows(
-        date,
-        showAdjacentDays,
-        shouldMaintainConsistentRowCount
-      ),
-    [date, shouldMaintainConsistentRowCount, showAdjacentDays]
-  );
-
-  const Day = DayComponent ?? DefaultDayComponent;
+}: MonthlyCalendarProps<T>): React.JSX.Element {
+  const matrix = useMemo(() => {
+    return createMonthlyCalendarMatrix(viewingDate, selectedDate, {
+      ...MONTHLY_CALENDAR_OPTIONS,
+      ...options,
+    });
+  }, [viewingDate, selectedDate, options]);
 
   return (
     <View style={styles.container}>
-      {rows.map((row, rowIndex) => (
+      {matrix.map((row, rowIndex) => (
         <View key={`monthly-calendar-row-${rowIndex}`} style={styles.row}>
-          {row.map((calendarDate, colIndex) => {
+          {row.map((value, colIndex) => {
             return (
               <View
                 key={`monthly-calendar-row-${rowIndex}-col-${colIndex}`}
                 style={styles.cell}
               >
-                {calendarDate && (
-                  <Day date={calendarDate} onDayPress={onDayPress} />
+                {value && (
+                  <Day
+                    component={DayComponent}
+                    date={value[0]}
+                    metadata={value[1]}
+                    onPress={onDayPress}
+                  />
                 )}
               </View>
             );
@@ -63,9 +51,9 @@ function MonthlyCalendar<CalendarEventDataType>({
 }
 
 const styles = StyleSheet.create({
+  cell: { flex: 1 },
   container: { flexDirection: 'column', flex: 1 },
   row: { flex: 1, flexDirection: 'row' },
-  cell: { flex: 1 },
 });
 
 export default MonthlyCalendar;

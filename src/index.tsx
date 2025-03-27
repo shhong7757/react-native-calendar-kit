@@ -3,15 +3,20 @@ export { default as Calendar } from './components/core/Calendar';
 export { default as Day } from './components/core/Day';
 export { default as MonthlyCalendar } from './components/core/MonthlyCalendar';
 export { default as Navigator } from './components/core/Navigator';
-export { default as WeekDay } from './components/core/WeekDay';
-export { default as WeekDayList } from './components/core/WeekDayList';
+export { default as Weekday } from './components/core/Weekday';
+export { default as WeekdayList } from './components/core/WeekdayList';
 
 // view component
 export { default as SingleMonthlyCalendar } from './components/views/SingleMonthlyCalendar';
 export { default as SwipeableMonthlyCalendar } from './components/views/SwipeableMonthlyCalendar';
 
-// hooks
-export * from './hooks/useCalendar';
+// utils
+export { getDailyEvents, getMonthlyEvents } from './utils/event';
 
 // type
-export type { CalendarEvent, CalendarContextType } from './types';
+export type {
+  CalendarContextType,
+  CalendarEvent,
+  MonthMap,
+  WeekdayProps,
+} from './types';
