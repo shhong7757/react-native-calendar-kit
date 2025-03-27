@@ -85,6 +85,10 @@ export type MonthlyCalendarProps<T> = {
   DayComponent?: (props: DayComponentProps<T>) => React.JSX.Element;
 };
 
+export type MonthlyEventCounterProps = {
+  component: (props: { count: number }) => React.ReactNode;
+};
+
 export type SwipeableContainerRef = {
   swipe: (direction: SwipeDirectionType) => void;
 };
