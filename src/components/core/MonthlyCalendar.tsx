@@ -13,15 +13,16 @@ function MonthlyCalendar<T>({
   viewingDate,
   selectedDate,
   options,
+  eventMap,
   onDayPress,
   DayComponent,
 }: MonthlyCalendarProps<T>): React.JSX.Element {
   const matrix = useMemo(() => {
-    return createMonthlyCalendarMatrix(viewingDate, selectedDate, {
+    return createMonthlyCalendarMatrix(viewingDate, selectedDate, eventMap, {
       ...MONTHLY_CALENDAR_OPTIONS,
       ...options,
     });
-  }, [viewingDate, selectedDate, options]);
+  }, [viewingDate, selectedDate, options, eventMap]);
 
   return (
     <View style={styles.container}>
@@ -38,6 +39,7 @@ function MonthlyCalendar<T>({
                     component={DayComponent}
                     date={value[0]}
                     metadata={value[1]}
+                    events={value[2]}
                     onPress={onDayPress}
                   />
                 )}

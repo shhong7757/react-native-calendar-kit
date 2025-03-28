@@ -19,6 +19,7 @@ import type {
   SwipeDirectionType,
   SwipeableContainerRef,
   MonthlyCalendarProps,
+  CalendarEventMap,
 } from '../../types';
 
 import { SWIPE_DIRECTION } from '../../constants';
@@ -39,16 +40,25 @@ const MemoizedMonthlyCalendar = React.memo<{
   viewingDate: CalendarDate;
   selectedDate: CalendarDate;
   options: MonthlyCalendarOptions;
+  eventMap: CalendarEventMap<any>;
   DayComponent?: (props: DayComponentProps<any>) => React.JSX.Element;
   onDayPress?: (events: CalendarEvent<any>[]) => void;
 }>(
-  ({ viewingDate, selectedDate, options, DayComponent, onDayPress }) => (
+  ({
+    viewingDate,
+    selectedDate,
+    options,
+    DayComponent,
+    onDayPress,
+    eventMap,
+  }) => (
     <MonthlyCalendar
       viewingDate={viewingDate}
       selectedDate={selectedDate}
       options={options}
       DayComponent={DayComponent}
       onDayPress={onDayPress}
+      eventMap={eventMap}
     />
   ),
   arePropsEqual
@@ -72,15 +82,14 @@ const SlidingContents = React.memo<
   </>
 ));
 
-interface SwipeableMonthlyCalendarProps<CalendarEventDataType> {
+interface SwipeableMonthlyCalendarProps<T> {
+  events?: CalendarEvent<T>[];
   monthlyCalendarOptions?: MonthlyCalendarOptions;
   swipeAnimationDuration?: number;
   swipeThreshold?: number;
-  onDayPress?: (events: CalendarEvent<CalendarEventDataType>[]) => void;
-  onMonthChange?: (date: Date) => void;
-  DayComponent?: (
-    props: DayComponentProps<CalendarEventDataType>
-  ) => React.JSX.Element;
+  onDayPress?: (events: CalendarEvent<T>[]) => void;
+  onViewingMonthChange?: (date: Date) => void;
+  DayComponent?: (props: DayComponentProps<T>) => React.JSX.Element;
 }
 
 const createMonthlyCalendarList = (date: CalendarDate) => [
@@ -90,16 +99,23 @@ const createMonthlyCalendarList = (date: CalendarDate) => [
 ];
 
 function SwipeableMonthlyCalendar<T>({
+  events = [],
   monthlyCalendarOptions = {
     showAdjacentDays: false,
     shouldMaintainConsistentRowCount: false,
   },
   onDayPress,
-  onMonthChange,
+  onViewingMonthChange,
   DayComponent,
 }: SwipeableMonthlyCalendarProps<T>): React.JSX.Element {
-  const { viewingDate, selectedDate, updateViewingDate, setNavigateEnabled } =
-    useCalendarContext();
+  const {
+    addEvent,
+    eventMap,
+    viewingDate,
+    selectedDate,
+    updateViewingDate,
+    setNavigateEnabled,
+  } = useCalendarContext<T>();
 
   const [baseCalendarData, setBaseCalendarData] =
     useState<CalendarDate>(viewingDate);
@@ -108,6 +124,26 @@ function SwipeableMonthlyCalendar<T>({
   );
 
   const swipeableContainerRef = useRef<SwipeableContainerRef>(null);
+
+  const prevEvents = useRef<CalendarEvent<T>[]>();
+
+  useEffect(() => {
+    if (events) {
+      const prevEventIds = new Set(prevEvents.current?.map((e) => e.id));
+      const currentEventIds = new Set(events.map((e) => e.id));
+
+      if (
+        prevEventIds.size === currentEventIds.size &&
+        [...prevEventIds].every((id) => currentEventIds.has(id))
+      ) {
+        return;
+      }
+
+      addEvent(events);
+    }
+
+    prevEvents.current = events;
+  }, [events, addEvent]);
 
   useEffect(() => {
     if (areDatesEqual(viewingDate, baseCalendarData)) {
@@ -132,7 +168,7 @@ function SwipeableMonthlyCalendar<T>({
       setSwipeCalendarList(createMonthlyCalendarList(viewingDate));
 
       const newDate = new Date(viewingDate.year, viewingDate.month - 1, 1);
-      onMonthChange?.(newDate);
+      onViewingMonthChange?.(newDate);
       return;
     }
 
@@ -146,15 +182,15 @@ function SwipeableMonthlyCalendar<T>({
     if (swipeableContainerRef.current) {
       swipeableContainerRef.current.swipe(direction);
     }
-  }, [baseCalendarData, viewingDate, onMonthChange]);
+  }, [baseCalendarData, viewingDate, onViewingMonthChange]);
 
   const handleSwipeAnimationComplete = useCallback(() => {
     setBaseCalendarData(viewingDate);
     setSwipeCalendarList(createMonthlyCalendarList(viewingDate));
 
     const newDate = new Date(viewingDate.year, viewingDate.month - 1, 1);
-    onMonthChange?.(newDate);
-  }, [viewingDate, onMonthChange]);
+    onViewingMonthChange?.(newDate);
+  }, [viewingDate, onViewingMonthChange]);
 
   const handleSwipeThresholdReached = useCallback(
     (direction: SwipeDirectionType) => {
@@ -184,6 +220,7 @@ function SwipeableMonthlyCalendar<T>({
           selectedDate={selectedDate}
           options={monthlyCalendarOptions}
           DayComponent={DayComponent}
+          eventMap={eventMap}
         />
       }
       onSwipeAnimationComplete={handleSwipeAnimationComplete}
@@ -197,6 +234,7 @@ function SwipeableMonthlyCalendar<T>({
         options={monthlyCalendarOptions}
         DayComponent={DayComponent}
         onDayPress={onDayPress}
+        eventMap={eventMap}
       />
     </SwipeableContainer>
   );

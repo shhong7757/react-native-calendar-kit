@@ -3,24 +3,22 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { useCallback } from 'react';
 
-import { getDailyEvents } from '../../utils/event';
-
 import type { DayComponentProps } from '../../types';
 
 function Day<T>({
   component,
   date,
   metadata,
+  events,
   onPress,
 }: DayComponentProps<T>): React.JSX.Element {
-  const { eventMap, setSelectedDate } = useCalendarContext<T>();
-
-  const events = getDailyEvents(eventMap, date);
+  const { setSelectedDate, setViewingDate } = useCalendarContext<T>();
 
   const handlePress = useCallback(() => {
     setSelectedDate(date);
+    setViewingDate(date);
     onPress?.(events);
-  }, [events, onPress, date, setSelectedDate]);
+  }, [events, onPress, date, setSelectedDate, setViewingDate]);
 
   const getTextColor = () => {
     if (metadata?.isSelectedDay) return 'blue';
@@ -37,7 +35,7 @@ function Day<T>({
   return (
     <Pressable style={styles.container} onPress={handlePress}>
       {component ? (
-        component({ date, events })
+        component({ date, events, metadata })
       ) : (
         <Text style={textStyle}>{date.day}</Text>
       )}

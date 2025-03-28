@@ -6,8 +6,10 @@ export type CalendarContextType<T> = {
   navigateEnabled: boolean;
   selectedDate: CalendarDate;
   viewingDate: CalendarDate;
+  addEvent: (event: CalendarEvent<T> | CalendarEvent<T>[]) => void;
   setNavigateEnabled: (enabled: boolean) => void;
   setSelectedDate: (date: CalendarDate) => void;
+  setViewingDate: (date: CalendarDate) => void;
   updateViewingDate: (param: UpdateViewingDateParam) => void;
 };
 
@@ -36,10 +38,11 @@ export type CalendarLabels = {
 export type DayComponentProps<T> = {
   component?: (props: {
     date: CalendarDate;
-    metadata?: Partial<DayMetadata>;
     events: CalendarEvent<T>[];
+    metadata?: Partial<DayMetadata>;
   }) => React.ReactNode;
   date: CalendarDate;
+  events: CalendarEvent<T>[];
   metadata?: Partial<DayMetadata>;
   onPress?: (events: CalendarEvent<T>[]) => void;
 };
@@ -66,7 +69,11 @@ export enum MonthMap {
   DECEMBER = 11,
 }
 
-export type MonthlyCalendarCell = [CalendarDate, Partial<DayMetadata>];
+export type MonthlyCalendarCell = [
+  CalendarDate,
+  Partial<DayMetadata>,
+  CalendarEvent<any>[],
+];
 
 export type MonthlyCalendarOptions = {
   shouldMaintainConsistentRowCount: boolean;
@@ -78,6 +85,7 @@ export type MonthlyCalendarMatrix = Array<MonthlyCalendarRow>;
 export type MonthlyCalendarRow = Array<MonthlyCalendarCell | null>;
 
 export type MonthlyCalendarProps<T> = {
+  eventMap: CalendarEventMap<T>;
   options?: Partial<MonthlyCalendarOptions>;
   selectedDate: CalendarDate;
   viewingDate: CalendarDate;

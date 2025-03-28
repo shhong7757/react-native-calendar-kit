@@ -73,6 +73,12 @@ export const getNestedMapData = <CalendarEventDataType>(
   return flattenCalendarEventMap(currentMap);
 };
 
+export const getAllEvents = <T>(
+  eventMap: CalendarEventMap<T>
+): Array<CalendarEvent<T>> => {
+  return flattenCalendarEventMap(eventMap);
+};
+
 export const getDailyEvents = <T>(
   eventMap: CalendarEventMap<T>,
   { year, month, day }: CalendarDate

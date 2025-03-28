@@ -2,12 +2,11 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
 
-import { createCalendarEventMap } from '../utils/event';
+import { createCalendarEventMap, getAllEvents } from '../utils/event';
 import { createCalendarDate } from '../utils/calendarDate';
 
 import { DEFAULT_CALENDAR_LABELS } from '../constants';
@@ -22,23 +21,27 @@ import type {
 } from '../types';
 
 export type CalendarProps<T> = {
-  labels?: CalendarLabels;
   children: React.ReactNode;
-  events?: Array<CalendarEvent<T>>;
   initialDate?: Date;
+  initialEvents?: Array<CalendarEvent<T>>;
+  labels?: CalendarLabels;
+  onEventChange?: (events: CalendarEvent<T>[]) => void;
 };
 
-const CalendarContext = createContext<CalendarContextType<unknown> | undefined>(
+const CalendarContext = createContext<CalendarContextType<any> | undefined>(
   undefined
 );
 
 export function CalendarProvider<T>({
   children,
-  events,
+  initialEvents = [],
   initialDate = new Date(),
   labels: inputLabels,
+  onEventChange,
 }: CalendarProps<T>) {
-  const [eventMap, setEventMap] = useState<CalendarEventMap<T>>(new Map());
+  const [eventMap, setEventMap] = useState<CalendarEventMap<T>>(
+    createCalendarEventMap(initialEvents)
+  );
   const [navigateEnabled, setNavigateEnabled] = useState(true);
   const [selectedDate, setSelectedDate] = useState<CalendarDate>(
     createCalendarDate(initialDate)
@@ -53,6 +56,36 @@ export function CalendarProvider<T>({
       ...inputLabels,
     }),
     [inputLabels]
+  );
+
+  const addEvent = useCallback(
+    (event: CalendarEvent<T> | CalendarEvent<T>[]) => {
+      const events = Array.isArray(event) ? event : [event];
+
+      setEventMap((prevEventMap) => {
+        const newEventMap = new Map(prevEventMap);
+
+        events.forEach((e) => {
+          const { date, data, id } = e;
+          const { year, month, day } = createCalendarDate(date);
+
+          const yearMap = newEventMap.get(year) ?? new Map();
+          newEventMap.set(year, yearMap);
+
+          const monthMap = yearMap.get(month) ?? new Map();
+          yearMap.set(month, monthMap);
+
+          const dayList = monthMap.get(day) ?? [];
+          if (dayList.find((ev: CalendarEvent<T>) => ev.id === id)) return;
+          monthMap.set(day, [...dayList, { date, data, id }]);
+        });
+
+        onEventChange?.(getAllEvents(newEventMap));
+
+        return newEventMap;
+      });
+    },
+    [onEventChange]
   );
 
   const updateViewingDate = useCallback(
@@ -97,15 +130,6 @@ export function CalendarProvider<T>({
     [viewingDate]
   );
 
-  useEffect(() => {
-    if (events === undefined || events.length === 0) return;
-    setEventMap(() => createCalendarEventMap(events));
-  }, [events]);
-
-  useEffect(() => {
-    setViewingDate(selectedDate);
-  }, [selectedDate]);
-
   const value: CalendarContextType<T> = useMemo(
     () => ({
       labels,
@@ -113,8 +137,10 @@ export function CalendarProvider<T>({
       navigateEnabled,
       selectedDate,
       viewingDate,
+      addEvent,
       setNavigateEnabled,
       setSelectedDate,
+      setViewingDate,
       updateViewingDate,
     }),
     [
@@ -123,6 +149,7 @@ export function CalendarProvider<T>({
       navigateEnabled,
       selectedDate,
       viewingDate,
+      addEvent,
       updateViewingDate,
     ]
   );
