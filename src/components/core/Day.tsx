@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import type { DayComponentProps } from '../../types';
 
 function Day<T>({
-  component,
+  render,
   date,
   metadata,
   events,
@@ -34,8 +34,8 @@ function Day<T>({
 
   return (
     <Pressable style={styles.container} onPress={handlePress}>
-      {component ? (
-        component({ date, events, metadata })
+      {render ? (
+        render({ date, events, metadata })
       ) : (
         <Text style={textStyle}>{date.day}</Text>
       )}

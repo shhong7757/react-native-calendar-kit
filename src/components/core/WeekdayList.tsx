@@ -6,13 +6,13 @@ import { WeekdayMap, type WeekdayProps } from '../../types';
 interface WeekdayListProps {
   containerStyle?: ViewStyle;
   contentContainerStyle?: ViewStyle;
-  WeekDayComponent?: (props: WeekdayProps) => React.JSX.Element;
+  WeekdayComponent?: (props: WeekdayProps) => React.JSX.Element;
 }
 
 function WeekdayList({
   containerStyle,
   contentContainerStyle,
-  WeekDayComponent,
+  WeekdayComponent,
 }: WeekdayListProps): React.JSX.Element {
   return (
     <View style={[styles.container, containerStyle]}>
@@ -30,7 +30,7 @@ function WeekdayList({
             key={`weekday-list-${index}`}
             style={[styles.weekDay, contentContainerStyle]}
           >
-            <Weekday component={WeekDayComponent} weekday={weekday} />
+            <Weekday render={WeekdayComponent} weekday={weekday} />
           </View>
         );
       })}

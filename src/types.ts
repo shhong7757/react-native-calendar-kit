@@ -36,7 +36,7 @@ export type CalendarLabels = {
 };
 
 export type DayComponentProps<T> = {
-  component?: (props: {
+  render?: (props: {
     date: CalendarDate;
     events: CalendarEvent<T>[];
     metadata?: Partial<DayMetadata>;
@@ -94,7 +94,7 @@ export type MonthlyCalendarProps<T> = {
 };
 
 export type MonthlyEventCounterProps = {
-  component: (props: { count: number }) => React.ReactNode;
+  render: (props: { count: number }) => React.ReactNode;
 };
 
 export type NavigatorRenderProps = {
@@ -125,6 +125,6 @@ export enum WeekdayMap {
 }
 
 export type WeekdayProps = {
-  component?: (props: { weekday: WeekdayMap }) => React.ReactNode;
+  render?: (props: { weekday: WeekdayMap }) => React.ReactNode;
   weekday: WeekdayMap;
 };

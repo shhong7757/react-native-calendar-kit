@@ -21,7 +21,7 @@ function SwipeableMonthlyCalendarScreen() {
     <Calendar initialDate={date}>
       <View style={styles.container}>
         <Navigator render={MonthlyCalendarNavigator} />
-        <MonthlyEventCounter component={EventCounter} />
+        <MonthlyEventCounter render={EventCounter} />
         <WeekdayList />
         <SwipeableMonthlyCalendar
           monthlyCalendarOptions={{

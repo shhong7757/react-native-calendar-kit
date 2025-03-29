@@ -36,7 +36,7 @@ function MonthlyCalendar<T>({
               >
                 {value && (
                   <Day
-                    component={DayComponent}
+                    render={DayComponent}
                     date={value[0]}
                     metadata={value[1]}
                     events={value[2]}

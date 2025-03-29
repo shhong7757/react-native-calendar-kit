@@ -4,11 +4,11 @@ import { useCalendarContext } from '../../context/CalendarContext';
 
 import { WeekdayMap, type WeekdayProps } from '../../types';
 
-function Weekday({ component, weekday }: WeekdayProps) {
+function Weekday({ render, weekday }: WeekdayProps) {
   const { labels } = useCalendarContext();
 
-  if (component) {
-    return component({ weekday });
+  if (render) {
+    return render({ weekday });
   }
 
   return (
