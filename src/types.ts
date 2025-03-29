@@ -69,11 +69,9 @@ export enum MonthMap {
   DECEMBER = 11,
 }
 
-export type CalendarCell = [
-  CalendarDate,
-  Partial<DayMetadata>,
-  CalendarEvent<any>[],
-];
+export type CalendarCell<T> =
+  | [CalendarDate, Partial<DayMetadata>, CalendarEvent<T>[]]
+  | null;
 
 export type MonthlyCalendarOptions = {
   shouldMaintainConsistentRowCount: boolean;

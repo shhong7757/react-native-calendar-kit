@@ -20,49 +20,9 @@ import type {
   SwipeDirectionType,
   SwipeableContainerRef,
   MonthlyCalendarMatrixProps,
-  CalendarEventMap,
 } from '../../types';
 
 import { DEFAULT_SWIPE_CONFIG, SWIPE_DIRECTION } from '../../constants';
-
-const arePropsEqual = (
-  prevProps: MonthlyCalendarMatrixProps<any>,
-  nextProps: MonthlyCalendarMatrixProps<any>
-) => {
-  return (
-    areDatesEqual(prevProps.viewingDate, nextProps.viewingDate) &&
-    prevProps.DayComponent === nextProps.DayComponent &&
-    JSON.stringify(prevProps.options) === JSON.stringify(nextProps.options)
-  );
-};
-
-const MemoizedMonthlyCalendar = React.memo<{
-  viewingDate: CalendarDate;
-  selectedDate: CalendarDate;
-  options: MonthlyCalendarOptions;
-  eventMap: CalendarEventMap<any>;
-  DayComponent?: (props: DayComponentProps<any>) => React.JSX.Element;
-  onDayPress?: (events: CalendarEvent<any>[]) => void;
-}>(
-  ({
-    viewingDate,
-    selectedDate,
-    options,
-    DayComponent,
-    onDayPress,
-    eventMap,
-  }) => (
-    <MonthlyCalendarMatrix
-      viewingDate={viewingDate}
-      selectedDate={selectedDate}
-      options={options}
-      DayComponent={DayComponent}
-      onDayPress={onDayPress}
-      eventMap={eventMap}
-    />
-  ),
-  arePropsEqual
-);
 
 const SlidingContents = React.memo<
   Omit<MonthlyCalendarMatrixProps<any>, 'onDayPress' | 'viewingDate'> & {
@@ -72,7 +32,7 @@ const SlidingContents = React.memo<
 >(({ calendarList, options, ...props }) => (
   <>
     {calendarList.map((value, index) => (
-      <MemoizedMonthlyCalendar
+      <MonthlyCalendarMatrix
         key={`monthly-calendar-list-${index}`}
         options={options}
         viewingDate={value}
@@ -226,12 +186,13 @@ function MonthlyCalendar<T>({
   // swipeable 옵션이 false일 경우 스와이프 기능을 비활성화 한다.
   if (!swipeable) {
     return (
-      <MemoizedMonthlyCalendar
+      <MonthlyCalendarMatrix
         viewingDate={baseCalendarData}
         selectedDate={selectedDate}
         options={monthlyCalendarOptions}
-        DayComponent={DayComponent}
-        onDayPress={onDayPress}
+        // TODO: Any를 사용하지 않는 방법 찾기
+        DayComponent={DayComponent as any}
+        onDayPress={onDayPress as any}
         eventMap={eventMap}
       />
     );
@@ -256,12 +217,13 @@ function MonthlyCalendar<T>({
       onSwipeSetup={handleSwipeSetup}
       onSwipeThresholdReached={handleSwipeThresholdReached}
     >
-      <MemoizedMonthlyCalendar
+      <MonthlyCalendarMatrix
         viewingDate={baseCalendarData}
         selectedDate={selectedDate}
         options={monthlyCalendarOptions}
-        DayComponent={DayComponent}
-        onDayPress={onDayPress}
+        // TODO: Any를 사용하지 않는 방법 찾기
+        DayComponent={DayComponent as any}
+        onDayPress={onDayPress as any}
         eventMap={eventMap}
       />
     </SwipeableContainer>

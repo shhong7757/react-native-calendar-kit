@@ -48,14 +48,14 @@ const createMonthlyCalendarCellMetadata = (
   };
 };
 
-const createBaseMonthMatrix = <T extends null>(
+const createBaseMonthMatrix = <T>(
   viewingDate: CalendarDate,
   selectedDate: CalendarDate,
   eventMap: CalendarEventMap<T>
 ) => {
   const days = getDaysInMonth(viewingDate);
   const firstDayOfMonth = getFirstDayOfMonth(viewingDate);
-  const matrix: Array<Array<CalendarCell | null>> = [];
+  const matrix: Array<Array<CalendarCell<T>>> = [];
 
   let row = Array(WEEK_DAY_COUNT).fill(null);
   let indexOfDays = 0;
@@ -88,10 +88,10 @@ const createBaseMonthMatrix = <T extends null>(
   return matrix;
 };
 
-const fillPrevMonthDays = (
-  row: (CalendarCell | null)[] | undefined,
+const fillPrevMonthDays = <T>(
+  row: CalendarCell<T>[] | undefined,
   viewingDate: CalendarDate,
-  eventMap: CalendarEventMap<any>
+  eventMap: CalendarEventMap<T>
 ) => {
   if (row === undefined) return;
 
@@ -115,10 +115,10 @@ const fillPrevMonthDays = (
   }
 };
 
-const fillNextMonthDays = (
-  row: (CalendarCell | null)[] | undefined,
+const fillNextMonthDays = <T>(
+  row: CalendarCell<T>[] | undefined,
   viewingDate: CalendarDate,
-  eventMap: CalendarEventMap<any>
+  eventMap: CalendarEventMap<T>
 ): void => {
   if (row === undefined || row.length === 0) return;
 
@@ -138,12 +138,12 @@ const fillNextMonthDays = (
   }
 };
 
-export const createMonthlyCalendarMatrix = (
+export const createMonthlyCalendarMatrix = <T>(
   viewingDate: CalendarDate,
   selectedDate: CalendarDate,
-  eventMap: CalendarEventMap<any>,
+  eventMap: CalendarEventMap<T>,
   options: MonthlyCalendarOptions
-): (CalendarCell | null)[][] => {
+): CalendarCell<T>[][] => {
   const { shouldMaintainConsistentRowCount, showAdjacentDays } = options;
 
   const matrix = createBaseMonthMatrix(viewingDate, selectedDate, eventMap);
