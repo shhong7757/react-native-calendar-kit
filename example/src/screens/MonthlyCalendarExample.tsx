@@ -2,7 +2,7 @@ import {
   Calendar,
   MonthlyEventCounter,
   Navigator,
-  SwipeableMonthlyCalendar,
+  MonthlyCalendar,
   WeekdayList,
 } from 'react-native-calendar-kit';
 import { MonthlyCalendarNavigator } from '../components';
@@ -14,7 +14,7 @@ function EventCounter({ count }: { count: number }) {
   return <Text>{`event count: ${count}`}</Text>;
 }
 
-function SwipeableMonthlyCalendarScreen() {
+function MonthlyCalendarExample() {
   const [date] = useState(new Date());
 
   return (
@@ -23,7 +23,7 @@ function SwipeableMonthlyCalendarScreen() {
         <Navigator render={MonthlyCalendarNavigator} />
         <MonthlyEventCounter render={EventCounter} />
         <WeekdayList />
-        <SwipeableMonthlyCalendar
+        <MonthlyCalendar
           monthlyCalendarOptions={{
             showAdjacentDays: true,
             shouldMaintainConsistentRowCount: true,
@@ -38,4 +38,4 @@ const styles = StyleSheet.create({
   container: { backgroundColor: 'white', height: 460 },
 });
 
-export default SwipeableMonthlyCalendarScreen;
+export default MonthlyCalendarExample;

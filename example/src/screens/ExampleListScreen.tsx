@@ -11,7 +11,7 @@ import { useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 
 function ExampleListScreen() {
-  const example = ['SwipeableMonthlyCalendar', 'SingleMonthlyCalendar'];
+  const example = ['MonthlyCalendar'];
   const navigation = useNavigation();
 
   const handleExamplePress = useCallback(

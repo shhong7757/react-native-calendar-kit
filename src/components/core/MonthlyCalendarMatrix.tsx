@@ -5,18 +5,18 @@ import { useMemo } from 'react';
 
 import { createMonthlyCalendarMatrix } from '../../utils/monthlyCalendar';
 
-import type { MonthlyCalendarProps } from '../../types';
+import type { MonthlyCalendarMatrixProps } from '../../types';
 
 import { MONTHLY_CALENDAR_OPTIONS } from '../../constants';
 
-function MonthlyCalendar<T>({
+function MonthlyCalendarMatrix<T>({
   viewingDate,
   selectedDate,
   options,
   eventMap,
   onDayPress,
   DayComponent,
-}: MonthlyCalendarProps<T>): React.JSX.Element {
+}: MonthlyCalendarMatrixProps<T>): React.JSX.Element {
   const matrix = useMemo(() => {
     return createMonthlyCalendarMatrix(viewingDate, selectedDate, eventMap, {
       ...MONTHLY_CALENDAR_OPTIONS,
@@ -58,4 +58,4 @@ const styles = StyleSheet.create({
   row: { flex: 1, flexDirection: 'row' },
 });
 
-export default MonthlyCalendar;
+export default MonthlyCalendarMatrix;

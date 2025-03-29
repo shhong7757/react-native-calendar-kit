@@ -69,7 +69,7 @@ export enum MonthMap {
   DECEMBER = 11,
 }
 
-export type MonthlyCalendarCell = [
+export type CalendarCell = [
   CalendarDate,
   Partial<DayMetadata>,
   CalendarEvent<any>[],
@@ -80,11 +80,7 @@ export type MonthlyCalendarOptions = {
   showAdjacentDays: boolean;
 };
 
-export type MonthlyCalendarMatrix = Array<MonthlyCalendarRow>;
-
-export type MonthlyCalendarRow = Array<MonthlyCalendarCell | null>;
-
-export type MonthlyCalendarProps<T> = {
+export type MonthlyCalendarMatrixProps<T> = {
   eventMap: CalendarEventMap<T>;
   options?: Partial<MonthlyCalendarOptions>;
   selectedDate: CalendarDate;

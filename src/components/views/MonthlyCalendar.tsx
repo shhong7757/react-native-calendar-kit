@@ -1,5 +1,6 @@
-import MonthlyCalendar from '../core/MonthlyCalendar';
+import MonthlyCalendarMatrix from '../core/MonthlyCalendarMatrix';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import SwipeableContainer from '../core/SwipeableContainer';
 
 import { useCalendarContext } from '../../context/CalendarContext';
 
@@ -18,16 +19,15 @@ import type {
   MonthlyCalendarOptions,
   SwipeDirectionType,
   SwipeableContainerRef,
-  MonthlyCalendarProps,
+  MonthlyCalendarMatrixProps,
   CalendarEventMap,
 } from '../../types';
 
-import { SWIPE_DIRECTION } from '../../constants';
-import SwipeableContainer from '../core/SwipeableContainer';
+import { DEFAULT_SWIPE_CONFIG, SWIPE_DIRECTION } from '../../constants';
 
 const arePropsEqual = (
-  prevProps: MonthlyCalendarProps<any>,
-  nextProps: MonthlyCalendarProps<any>
+  prevProps: MonthlyCalendarMatrixProps<any>,
+  nextProps: MonthlyCalendarMatrixProps<any>
 ) => {
   return (
     areDatesEqual(prevProps.viewingDate, nextProps.viewingDate) &&
@@ -52,7 +52,7 @@ const MemoizedMonthlyCalendar = React.memo<{
     onDayPress,
     eventMap,
   }) => (
-    <MonthlyCalendar
+    <MonthlyCalendarMatrix
       viewingDate={viewingDate}
       selectedDate={selectedDate}
       options={options}
@@ -65,7 +65,7 @@ const MemoizedMonthlyCalendar = React.memo<{
 );
 
 const SlidingContents = React.memo<
-  Omit<MonthlyCalendarProps<any>, 'onDayPress' | 'viewingDate'> & {
+  Omit<MonthlyCalendarMatrixProps<any>, 'onDayPress' | 'viewingDate'> & {
     calendarList: CalendarDate[];
     options: MonthlyCalendarOptions;
   }
@@ -82,9 +82,10 @@ const SlidingContents = React.memo<
   </>
 ));
 
-interface SwipeableMonthlyCalendarProps<T> {
+interface MonthlyCalendarProps<T> {
   events?: CalendarEvent<T>[];
   monthlyCalendarOptions?: MonthlyCalendarOptions;
+  swipeable?: boolean;
   swipeAnimationDuration?: number;
   swipeThreshold?: number;
   onDayPress?: (events: CalendarEvent<T>[]) => void;
@@ -98,16 +99,19 @@ const createMonthlyCalendarList = (date: CalendarDate) => [
   shiftMonth(date, 1),
 ];
 
-function SwipeableMonthlyCalendar<T>({
+function MonthlyCalendar<T>({
   events = [],
   monthlyCalendarOptions = {
     showAdjacentDays: false,
     shouldMaintainConsistentRowCount: false,
   },
+  swipeable = true,
+  swipeAnimationDuration = DEFAULT_SWIPE_CONFIG.animationDuration,
+  swipeThreshold = DEFAULT_SWIPE_CONFIG.threshold,
   onDayPress,
   onViewingMonthChange,
   DayComponent,
-}: SwipeableMonthlyCalendarProps<T>): React.JSX.Element {
+}: MonthlyCalendarProps<T>): React.JSX.Element {
   const {
     addEvent,
     eventMap,
@@ -179,37 +183,59 @@ function SwipeableMonthlyCalendar<T>({
       direction = SWIPE_DIRECTION.RIGHT;
     }
 
-    if (swipeableContainerRef.current) {
+    if (swipeable && swipeableContainerRef.current) {
       swipeableContainerRef.current.swipe(direction);
     }
-  }, [baseCalendarData, viewingDate, onViewingMonthChange]);
+  }, [baseCalendarData, viewingDate, onViewingMonthChange, swipeable]);
 
   const handleSwipeAnimationComplete = useCallback(() => {
+    if (!swipeable) return;
+
     setBaseCalendarData(viewingDate);
     setSwipeCalendarList(createMonthlyCalendarList(viewingDate));
 
     const newDate = new Date(viewingDate.year, viewingDate.month - 1, 1);
     onViewingMonthChange?.(newDate);
-  }, [viewingDate, onViewingMonthChange]);
+  }, [viewingDate, onViewingMonthChange, swipeable]);
 
   const handleSwipeThresholdReached = useCallback(
     (direction: SwipeDirectionType) => {
+      if (!swipeable) return;
+
       if (direction === SWIPE_DIRECTION.LEFT) {
         updateViewingDate({ unit: 'm', offset: -1 });
       } else if (direction === SWIPE_DIRECTION.RIGHT) {
         updateViewingDate({ unit: 'm', offset: 1 });
       }
     },
-    [updateViewingDate]
+    [updateViewingDate, swipeable]
   );
 
   const handleSwipeSetup = useCallback(() => {
+    if (!swipeable) return;
+
     setNavigateEnabled(false);
-  }, [setNavigateEnabled]);
+  }, [setNavigateEnabled, swipeable]);
 
   const handleSwipeCleanup = useCallback(() => {
+    if (!swipeable) return;
+
     setNavigateEnabled(true);
-  }, [setNavigateEnabled]);
+  }, [setNavigateEnabled, swipeable]);
+
+  // swipeable 옵션이 false일 경우 스와이프 기능을 비활성화 한다.
+  if (!swipeable) {
+    return (
+      <MemoizedMonthlyCalendar
+        viewingDate={baseCalendarData}
+        selectedDate={selectedDate}
+        options={monthlyCalendarOptions}
+        DayComponent={DayComponent}
+        onDayPress={onDayPress}
+        eventMap={eventMap}
+      />
+    );
+  }
 
   return (
     <SwipeableContainer
@@ -223,6 +249,8 @@ function SwipeableMonthlyCalendar<T>({
           eventMap={eventMap}
         />
       }
+      swipeAnimationDuration={swipeAnimationDuration}
+      swipeThreshold={swipeThreshold}
       onSwipeAnimationComplete={handleSwipeAnimationComplete}
       onSwipeCleanup={handleSwipeCleanup}
       onSwipeSetup={handleSwipeSetup}
@@ -240,4 +268,4 @@ function SwipeableMonthlyCalendar<T>({
   );
 }
 
-export default SwipeableMonthlyCalendar;
+export default MonthlyCalendar;
