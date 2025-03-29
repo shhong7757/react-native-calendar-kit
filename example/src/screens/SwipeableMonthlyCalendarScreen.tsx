@@ -5,6 +5,7 @@ import {
   SwipeableMonthlyCalendar,
   WeekdayList,
 } from 'react-native-calendar-kit';
+import { MonthlyCalendarNavigator } from '../components';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useState } from 'react';
@@ -19,7 +20,7 @@ function SwipeableMonthlyCalendarScreen() {
   return (
     <Calendar initialDate={date}>
       <View style={styles.container}>
-        <Navigator />
+        <Navigator render={MonthlyCalendarNavigator} />
         <MonthlyEventCounter component={EventCounter} />
         <WeekdayList />
         <SwipeableMonthlyCalendar

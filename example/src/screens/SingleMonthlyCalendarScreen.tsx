@@ -5,12 +5,13 @@ import {
   SingleMonthlyCalendar,
   WeekdayList,
 } from 'react-native-calendar-kit';
+import { MonthlyCalendarNavigator } from '../components';
 
 function SingleMonthlyCalendarScreen() {
   return (
     <Calendar>
       <View style={styles.container}>
-        <Navigator />
+        <Navigator render={MonthlyCalendarNavigator} />
         <WeekdayList />
         <SingleMonthlyCalendar />
       </View>

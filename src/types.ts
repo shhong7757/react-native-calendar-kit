@@ -97,6 +97,12 @@ export type MonthlyEventCounterProps = {
   component: (props: { count: number }) => React.ReactNode;
 };
 
+export type NavigatorRenderProps = {
+  monthLabel: string;
+  viewingDate: CalendarDate;
+  updateViewingDate: (param: UpdateViewingDateParam) => void;
+};
+
 export type SwipeableContainerRef = {
   swipe: (direction: SwipeDirectionType) => void;
 };
